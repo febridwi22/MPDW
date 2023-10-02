@@ -1,0 +1,132 @@
+---
+title: "MPDW 5"
+author: "Febri Dwi Cahyanto G1401211049"
+date: "2023-10-02"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(tsibble)
+library(tseries)
+library(MASS)
+```
+## INPUT DATA
+```{r}
+library(readxl)
+suhukd<- read_excel("C:/Users/user/Downloads/mpdw11.xlsx")
+```
+## UBAH DATA KE TS
+```{r}
+suhukd.ts <- ts(suhukd$suhu)
+```
+## PLOT TIME SERIES
+```{r}
+ts.plot(suhukd.ts, xlab="Time Period ", ylab="Suhu Kediri", 
+        main = "Time Series Plot")
+points(suhukd.ts)
+```
+## PLOT ACF
+```{r}
+acf(suhukd.ts)
+```
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut cenderung *cut off* dan membentuk gelombang sinus
+
+## UJI ADF
+```{r}
+tseries::adf.test(suhukd.ts)
+```
+Berdasarkan uji ADF tersebut, didapat *p-value* sebesar 0.01 yang lebih kecil dari taraf nyata 5% sehingga tolak $H_0$ dan menandakan bahwa data stasioner dalam rataan. Hal ini sesuai dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
+
+## PLOT BOX-COX
+```{r}
+index <- seq(1:132)
+bc = boxcox(suhukd.ts~index, lambda = seq(0,4,by=0.01))
+#Nilai Rounded Lambda
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#SK
+bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+```
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0** dan pada selang kepercayaan 95% nilai memiliki batas bawah **0.00** dan batas atas **0.65**. Selang tersebut tidak memuat nilai satu sehingga dapat dikatakan bahwa data bangkitan tidak stasioner dalam ragam.
+
+Kesimpulan: Maka data tersebut stasioner dalam rataan dan tetapi tidak stasioner dalam ragam
+
+# PARTISI DATA
+
+# BAGIAN 1
+```{r}
+suhukd.ts1 <- suhukd$suhu[19:49] |> ts()
+mean(suhukd.ts1)
+var(suhukd.ts1)
+```
+
+## PLOT TIME SERIES
+```{r}
+ts.plot(suhukd.ts1, xlab="Time Period ", ylab="Suhu Kediri", 
+        main = "Time Series Plot")
+points(suhukd.ts1)
+```
+## PLOT ACF
+```{r}
+acf(suhukd.ts1)
+```
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut cenderung *cut off* dan membentuk gelombang sinus
+
+## UJI ADF
+```{r}
+tseries::adf.test(suhukd.ts1)
+```
+Berdasarkan uji ADF tersebut, didapat *p-value* sebesar 0.5674 yang lebih besar dari taraf nyata 5% sehingga terima $H_0$ dan menandakan bahwa data tidak stasioner dalam rataan. Hal ini sesuai dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
+
+##PLOT BOX-COX
+```{r}
+index.1 <- seq(19:49)
+bc.1 = boxcox(suhukd.ts1~index.1, lambda = seq(0,4,by=0.01))
+#Nilai Rounded Lambda
+lambda.1 <- bc.1$x[which.max(bc.1$y)]
+lambda.1
+#SK
+bc.1$x[bc.1$y > max(bc.1$y) - 1/2 * qchisq(.95,1)]
+```
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0** dan pada selang kepercayaan 95% nilai memiliki batas bawah **0.00** dan batas atas **3.54**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data bangkitan stasioner dalam ragam.
+
+Kesimpulan partisi 1: Maka data tersebut tidak stasioner dalam rataan tetapi stasioner dalam ragam
+
+# BAGIAN 2
+```{r}
+suhukd.ts2 <- suhukd$suhu[19:37] |> ts()
+mean(suhukd.ts2)
+var(suhukd.ts2)
+```
+## PLOT TIME SERIES
+```{r}
+ts.plot(suhukd.ts2, xlab="Time Period ", ylab="Suhu Kediri", 
+        main = "Time Series Plot")
+points(suhukd.ts2)
+```
+## PLOT ACF
+```{r}
+acf(suhukd.ts2)
+```
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut cenderung *cut off* dan membentuk gelombang sinus
+
+## UJI ADF
+```{r}
+tseries::adf.test(suhukd.ts2)
+```
+Berdasarkan uji ADF tersebut, didapat *p-value* sebesar 0.04542 yang lebih kecil dari taraf nyata 5% sehingga tolak $H_0$ dan menandakan bahwa data stasioner dalam rataan. Hal ini sesuai dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
+
+## PLOT BOX-COX
+```{r}
+index.2 <- seq(19:37)
+bc.2 = boxcox(suhukd.ts2~index.2, lambda = seq(0,4,by=0.01))
+#Nilai Rounded Lambda
+lambda.2 <- bc.2$x[which.max(bc.2$y)]
+lambda.2
+#SK
+bc.2$x[bc.2$y > max(bc.2$y) - 1/2 * qchisq(.95,1)]
+```
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0** dan pada selang kepercayaan 95% nilai memiliki batas bawah **0.00** dan batas atas **4.00**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data bangkitan stasioner dalam ragam.
+
+Kesimpulan partisi 2: Maka data tersebut stasioner dalam rataan dan ragam
