@@ -1,0 +1,135 @@
+---
+title: "UTS MPDW"
+author: "Febri Dwi Cahyanto"
+date: "2023-10-06"
+output: html_document
+---
+
+```{r}
+install.packages("forecast")
+install.packages("TTR")
+install.packages("TSA")
+install.packages("dplyr")
+install.packages("lmtest") 
+install.packages("orcutt") 
+install.packages("HoRM") 
+install.packages("corrplot")
+install.packages("dLagM")
+install.packages("dynlm")
+install.packages("MLmetrics")
+install.packages("ggplot2")
+install.packages("tsibble")
+install.packages("tseries")
+install.packages("MASS")
+install.packages("aTSA")
+library("forecast")
+library("graphics")
+library("TTR")
+library("TSA")
+library(dplyr)
+library(forecast)
+library(lmtest) 
+library(orcutt) 
+library(HoRM) 
+library(corrplot)
+library(dLagM)
+library(dynlm)
+library(MLmetrics)
+library(ggplot2)
+library(tsibble)
+library(tseries)
+library(MASS)
+library(aTSA)
+library(tseries)
+```
+## input data dengan penambahan nilai 998
+```{r}
+library(readxl)
+datauts <- read_excel("Data UTS Fix.xlsx")
+datauts
+```
+## ubah data ke ts
+```{r}
+datauts.ts <- ts(datauts$Data)
+```
+## plot time series
+```{r}
+ts.plot(datauts.ts, xlab="Time Period ", ylab="Data", 
+        main = "Time Series Plot")
+points(datauts.ts)
+```
+data memiliki pola aditif musiman dengan trend 
+## membagi data menjadi data latih 80% dan data uji 20%
+```{r}
+dt.latih <- datauts[1:120,2]
+dt.uji <- datauts[121:150,2]
+dt.latih.ts <- ts(dt.latih, frequency = 12)
+dt.uji.ts <- ts(dt.uji, frequency = 12)
+```
+## plot time series data latih dan uji
+```{r}
+# data latih
+ts.plot(dt.latih.ts, col="orange",main="Plot data latih", type="o",xlab="Time",ylab="Data")
+points(dt.latih.ts)
+
+# data uji
+ts.plot(dt.uji.ts, col="green",main="Plot data uji", type="o",xlab="Time",ylab="Data")
+points(dt.uji.ts)
+```
+#cek kestasioneran
+##plot acf
+```{r}
+acf(dt.latih.ts)
+```
+## uji adf
+```{r}
+adf.test(dt.latih.ts) 
+```
+Berdasarkan uji ADF tersebut, didapat *p-value* sebesar 0.344 yang lebih besar dari taraf nyata 5% sehingga tak tolak $H_0$ dan menandakan bahwa data tidak stasioner dalam rataan. Hal ini sesuai dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
+
+## spesifikasi model
+```{r}
+par(mfrow = c(1,2))
+acf(dt.latih, main="ACF", lag.max=20) #ARIMA(0,0,2)
+pacf(dt.latih, main="PACF", lag.max=20) #ARIMA(1,0,0)
+par(mfrow = c(1,1))
+```
+
+```{r}
+eac (dt.latih)
+```
+
+```{r}
+model1.ma2=arima(dt.latih, order=c(0,0,2),method="ML")
+summary(model1.ma2) 
+lmtest::coeftest(model1.ma2) 
+
+model2.ma2=arima(dt.latih, order=c(1,0,0),method="ML") 
+summary(model2.ma2) 
+lmtest::coeftest(model2.ma2) 
+
+model3.ma2=arima(dt.latih, order=c(1,0,3),method="ML") 
+summary(model3.ma2) 
+lmtest::coeftest(model3.ma2) 
+
+model4.ma2=arima(dt.latih, order=c(2,0,3),method="ML") 
+summary(model4.ma2) 
+lmtest::coeftest(model4.ma2) 
+
+model5.ma2=arima(dt.latih, order=c(3,0,3),method="ML") 
+summary(model5.ma2) 
+lmtest::coeftest(model5.ma2)
+
+```
+## eksporasi sisaan
+```{r}
+sisaan.ma2 <- model1.ma2$residuals
+par(mfrow=c(2,2))
+qqnorm(sisaan.ma2)
+qqline(sisaan.ma2, col = "blue", lwd = 2)
+plot(c(1:length(sisaan.ma2)),sisaan.ma2)
+acf(sisaan.ma2)
+pacf(sisaan.ma2)
+par(mfrow = c(1,1))
+```
+
